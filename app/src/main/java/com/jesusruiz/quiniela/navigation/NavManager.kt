@@ -1,0 +1,32 @@
+package com.jesusruiz.quiniela.navigation
+
+import androidx.compose.runtime.Composable
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.jesusruiz.quiniela.viewmodels.LeagueViewModel
+import com.jesusruiz.quiniela.views.CreationLeagueView
+import com.jesusruiz.quiniela.views.HomeView
+import dagger.hilt.android.lifecycle.HiltViewModel
+
+sealed class Screen(val route: String){
+    data object HomeView: Screen("Home")
+    data object CreationLeagueView: Screen("CreateLeague")
+    data object QuinielaView: Screen("Quiniela")
+}
+
+@Composable
+fun NavManager(){
+    val controller = rememberNavController()
+    NavHost(navController = controller, startDestination = Screen.HomeView.route){
+        composable(Screen.HomeView.route) {
+            HomeView(controller)
+        }
+        composable(Screen.CreationLeagueView.route) {
+            val leagueViewModel: LeagueViewModel = hiltViewModel()
+            CreationLeagueView(controller, leagueViewModel)
+        }
+    }
+
+}
