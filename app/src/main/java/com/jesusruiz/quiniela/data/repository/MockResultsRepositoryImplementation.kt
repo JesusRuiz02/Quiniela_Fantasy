@@ -62,6 +62,8 @@ class MockResultsRepositoryImplementation @Inject constructor(): ResultsReposito
         )
     )
 
+
+
     val userJourney: Journey = Journey(
         id = "prueba",
         roundNumber = 16,
@@ -73,8 +75,9 @@ class MockResultsRepositoryImplementation @Inject constructor(): ResultsReposito
     )
 
     val leagues: HashMap<String, String> = hashMapOf(
-        "LigaMx" to "01",
-        "PremierLeague" to "02"
+        "01" to "Liga MX",
+        "02" to "Premier League",
+        "03" to "Liga Española"
     )
 
     override suspend fun getResultsByJourney(
@@ -90,6 +93,7 @@ class MockResultsRepositoryImplementation @Inject constructor(): ResultsReposito
         }
 
     }
+
 
     override suspend fun getJourneysByLeague(leagueID: String): Resource<List<Journey>> {
         return Resource.Error("no hay info suficiente")
@@ -113,6 +117,8 @@ class MockResultsRepositoryImplementation @Inject constructor(): ResultsReposito
             return Resource.Error("Error")
         }
     }
+
+
 
 
 }

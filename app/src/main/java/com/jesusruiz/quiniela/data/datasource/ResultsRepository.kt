@@ -11,4 +11,6 @@ interface ResultsRepository {
     suspend fun getFullJourney(round: Int): Resource<Journey>
 
     suspend fun getAllApiLeagues(): Resource<HashMap<String, String>>
+
+
 }
