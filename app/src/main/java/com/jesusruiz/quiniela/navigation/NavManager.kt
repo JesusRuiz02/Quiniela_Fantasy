@@ -5,9 +5,11 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.jesusruiz.quiniela.viewmodels.JourneyViewModel
 import com.jesusruiz.quiniela.viewmodels.LeagueViewModel
 import com.jesusruiz.quiniela.views.CreationLeagueView
 import com.jesusruiz.quiniela.views.HomeView
+import com.jesusruiz.quiniela.views.QuinielaView
 import dagger.hilt.android.lifecycle.HiltViewModel
 
 sealed class Screen(val route: String){
@@ -26,6 +28,10 @@ fun NavManager(){
         composable(Screen.CreationLeagueView.route) {
             val leagueViewModel: LeagueViewModel = hiltViewModel()
             CreationLeagueView(controller, leagueViewModel)
+        }
+        composable(Screen.QuinielaView.route) {
+            val journeyViewModel: JourneyViewModel = hiltViewModel()
+            QuinielaView(journeyViewModel = journeyViewModel)
         }
     }
 
