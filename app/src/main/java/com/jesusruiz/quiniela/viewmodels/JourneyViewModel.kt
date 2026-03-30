@@ -66,6 +66,7 @@ class JourneyViewModel @Inject constructor(
             is JourneyInputActions.ChangeUIState -> {
                 _journeyState.value = _journeyState.value.copy(uiState = action.value)
             }
+
         }
 
     }

@@ -14,9 +14,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-sealed class CreateLeagueInputActions(
-
-)
+sealed class CreateLeagueInputActions {
+    data class ChangeSelectedLeague(val value: Pair<String, String>): CreateLeagueInputActions()
+    data class ChangeNameSelectedLeague(val value: String): CreateLeagueInputActions()
+}
 
 data class LeagueStateUI(
     val leaguesAvailable: HashMap<String, String> = hashMapOf(),
@@ -26,9 +27,23 @@ data class LeagueStateUI(
 @HiltViewModel
 class LeagueViewModel @Inject constructor(
     val repository: ResultsRepository
-): ViewModel(){
+): ViewModel() {
     private val _leagueState = MutableStateFlow(LeagueStateUI())
-        val state: StateFlow<LeagueStateUI> = _leagueState.asStateFlow()
+    val state: StateFlow<LeagueStateUI> = _leagueState.asStateFlow()
+
+    fun onAction(action: CreateLeagueInputActions){
+        when(action){
+            is CreateLeagueInputActions.ChangeSelectedLeague -> {
+                val (id, leagueName) = action.value
+                val league = _leagueState.value.selectedLeague
+                _leagueState.value = _leagueState.value.copy(selectedLeague = league.copy(apiLeagueName = leagueName, apiID = id))
+            }
+            is CreateLeagueInputActions.ChangeNameSelectedLeague -> {
+                val league = _leagueState.value.selectedLeague
+                _leagueState.value = _leagueState.value.copy(selectedLeague = league.copy(leagueName = action.value))
+            }
+        }
+    }
 
     fun getAvailableLeagues(){
         viewModelScope.launch(Dispatchers.IO) {
@@ -37,6 +52,7 @@ class LeagueViewModel @Inject constructor(
                 is Resource.Error -> {
                     Log.d("Error", result.message)}
                 is Resource.Success -> {
+                    Log.d("Ligas", result.data.toString())
                     _leagueState.value = _leagueState.value.copy(leaguesAvailable = result.data)
                 }
             }
