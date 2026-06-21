@@ -12,5 +12,8 @@ interface ResultsRepository {
 
     suspend fun getAllApiLeagues(): Resource<HashMap<String, String>>
 
+    suspend fun getPredictionByLeague(leagueID: String): Resource<List<Game>>
+
+    suspend fun getGamesByWeekAndLeague(leagueID: String, journeyID: String): Resource<List<Game>>
 
 }

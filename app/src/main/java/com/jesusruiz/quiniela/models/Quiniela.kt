@@ -1,10 +1,8 @@
 package com.jesusruiz.quiniela.models
 
-data class Quiniela(
+data class QuinielaLeague(
     val id: Int = 0,
-    val score: Int = 0,
-    var predictions: List<Game> = listOf(),
-    val user: String = "",
-    val league: League,
-    val week: Journey
+    val users: List<String>,
+    val apiLeague: League,
+    val currentWeek: String
 )

@@ -1,7 +1,9 @@
 package com.jesusruiz.quiniela.di
 
 import com.jesusruiz.quiniela.data.datasource.ResultsRepository
+import com.jesusruiz.quiniela.data.datasource.UserLeaguesRepository
 import com.jesusruiz.quiniela.data.repository.MockResultsRepositoryImplementation
+import com.jesusruiz.quiniela.data.repository.MockUserLeagueImplementation
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -14,4 +16,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindResultsRepository(implementation: MockResultsRepositoryImplementation): ResultsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindUserRepository(implementation: MockUserLeagueImplementation): UserLeaguesRepository
 }

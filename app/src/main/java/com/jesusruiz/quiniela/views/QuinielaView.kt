@@ -24,18 +24,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.jesusruiz.quiniela.viewmodels.JourneyInputActions
 import com.jesusruiz.quiniela.viewmodels.JourneyViewModel
 import com.jesusruiz.quiniela.viewmodels.UIStates
 import com.jesusruiz.quiniela.views.items.GameItem
 import com.jesusruiz.quiniela.views.items.JourneyItemButton
+import com.jesusruiz.quiniela.views.items.PredictionItem
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun QuinielaView(modifier: Modifier = Modifier, journeyViewModel: JourneyViewModel){
+fun QuinielaView(modifier: Modifier = Modifier, journeyViewModel: JourneyViewModel, navController: NavController, leagueID: String, journeyId: String){
     val state by journeyViewModel.state.collectAsState()
     LaunchedEffect(Unit) {
+        journeyViewModel.onAction(JourneyInputActions.InitScreen(journeyId = journeyId, leagueId = leagueID))
         journeyViewModel.onAction(JourneyInputActions.ChangeAllPredictions)
     }
 
@@ -46,7 +49,7 @@ fun QuinielaView(modifier: Modifier = Modifier, journeyViewModel: JourneyViewMod
             },
             navigationIcon = {
                 TextButton (onClick = {
-
+                navController.popBackStack()
                 }){
                     Text("Go home")
                 }
@@ -55,41 +58,70 @@ fun QuinielaView(modifier: Modifier = Modifier, journeyViewModel: JourneyViewMod
     }) {
 
         paddingValues ->
-        if (state.uiState == UIStates.LOADING){
-            Box( modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
-                )
+        when(state.uiState){
+            UIStates.LOADING -> {
+                Box( modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
             }
-        }
-        else{
-            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(paddingValues)) {
-                LazyRow(modifier = Modifier.padding(horizontal = 10.dp)) {
-                    items(items = state.journeys){
-                        journey ->
-                        JourneyItemButton(Modifier.padding(horizontal = 3.dp),weekNumber = journey.roundNumber, weekPoints = state.score,)
+            UIStates.STARTING -> {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(paddingValues)) {
+                    LazyRow(modifier = Modifier.padding(horizontal = 10.dp)) {
+                        items(items = state.journeys){
+                                journey ->
+                            JourneyItemButton(Modifier.padding(horizontal = 3.dp),weekNumber = journey.roundNumber, weekPoints = state.score,)
+                        }
+                    }
+                    LazyColumn(modifier = Modifier.padding(vertical = 10.dp)) {
+                        items(state.predictions, key = {it.id}){
+                                game->
+                            GameItem(localTeam = game.firstClub, awayTeam = game.secondClub, homeScore = game.homeScore, awayScore = game.awayScore , onScoreChange = {
+                                    local, away ->
+                                val updatedScore = game.copy(
+                                    homeScore = local,
+                                    awayScore = away
+                                )
+                                journeyViewModel.onAction(JourneyInputActions.ChangePrediction(updatedScore))
+                            })
+                        }
+                    }
+                    Button(onClick = {
+                        journeyViewModel.getPredictionRanking()
+                    },) {
+                        Text("Validar")
                     }
                 }
-                LazyColumn(modifier = Modifier.padding(vertical = 10.dp)) {
-                    items(state.predictions, key = {it.id}){
-                            game->
-                        GameItem(localTeam = game.firstClub, awayTeam = game.secondClub, homeScore = game.homeScore, awayScore = game.awayScore , onScoreChange = {
-                            local, away ->
-                            val updatedScore = game.copy(
-                                homeScore = local,
-                                awayScore = away
+            }
+            UIStates.READY -> {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(paddingValues)) {
+                    val score = journeyViewModel.getPredictionPoints()
+                    Text(
+                        modifier = Modifier.padding(vertical = 10.dp),
+                        text = "Total Points: $score"
+                    )
+                    LazyColumn(modifier = Modifier.padding(vertical = 20.dp)) {
+                        val scores = state.scores
+                        val bets = journeyViewModel.getPredictionsByBet()
+                        val gamesWithBets = scores.zip(bets)
+                        items(gamesWithBets, key = { (game, bet) -> game.id }) { (game, bet) ->
+                            PredictionItem(
+                                localTeam = game.firstClub,
+                                awayTeam = game.secondClub,
+                                homeScore = game.homeScore,
+                                awayScore = game.awayScore,
+                                result = bet
                             )
-                            journeyViewModel.onAction(JourneyInputActions.ChangePrediction(updatedScore))
-                        })
+                        }
                     }
                 }
-                Button(onClick = {
-                    journeyViewModel.getPredictionRanking()
-                },) {
-                    Text("Validar")
-                }
+            }
+            UIStates.FAILED -> {
+                Text( text = "Something went wrong :(")
             }
         }
+
         }
 
 }

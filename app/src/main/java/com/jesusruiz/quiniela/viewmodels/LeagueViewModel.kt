@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesusruiz.quiniela.data.datasource.ResultsRepository
+import com.jesusruiz.quiniela.data.datasource.UserLeaguesRepository
 import com.jesusruiz.quiniela.models.League
 import com.jesusruiz.quiniela.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,7 +27,8 @@ data class LeagueStateUI(
 
 @HiltViewModel
 class LeagueViewModel @Inject constructor(
-    val repository: ResultsRepository
+    val repository: ResultsRepository,
+    val userRepository: UserLeaguesRepository
 ): ViewModel() {
     private val _leagueState = MutableStateFlow(LeagueStateUI())
     val state: StateFlow<LeagueStateUI> = _leagueState.asStateFlow()
@@ -42,6 +44,13 @@ class LeagueViewModel @Inject constructor(
                 val league = _leagueState.value.selectedLeague
                 _leagueState.value = _leagueState.value.copy(selectedLeague = league.copy(leagueName = action.value))
             }
+        }
+    }
+
+    fun addLeague(){
+        viewModelScope.launch(Dispatchers.IO) {
+            userRepository.addUserLeague(state.value.selectedLeague)
+            Log.d("Error",userRepository.getUserLeagues().toString())
         }
     }
 

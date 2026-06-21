@@ -31,7 +31,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.jesusruiz.quiniela.navigation.Screen
 import com.jesusruiz.quiniela.viewmodels.CreateLeagueInputActions
 import com.jesusruiz.quiniela.viewmodels.LeagueViewModel
 
@@ -90,7 +89,10 @@ fun CreationLeagueView(navController: NavController, leagueViewModel: LeagueView
                     }
                 }
             }
-            Button(onClick = { navController.navigate(Screen.QuinielaView.route)}) {
+            Button(onClick = {
+                leagueViewModel.addLeague()
+                navController.popBackStack()
+                }) {
                 Text("Crear")
             }
         }

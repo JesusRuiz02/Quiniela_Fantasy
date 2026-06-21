@@ -54,3 +54,4 @@ data class TemplateData(val journey: List<Game> = listOf(
     )
 )
 )
+const val COMPETITION_YEAR = 2026
