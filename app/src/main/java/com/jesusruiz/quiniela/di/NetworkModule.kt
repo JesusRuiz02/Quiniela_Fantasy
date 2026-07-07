@@ -1,6 +1,5 @@
 package com.jesusruiz.quiniela.di
 
-import com.jesusruiz.quiniela.data.datasource.ResultsRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

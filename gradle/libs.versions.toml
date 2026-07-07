@@ -15,6 +15,7 @@ retrofitV = "2.9.0"
 navigationV = "2.9.7"
 coilV = "3.3.0"
 iconsV = "1.7.0"
+roomV = "2.8.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -42,6 +43,9 @@ coil = {group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coilV"
 coilSvg = {group = "io.coil-kt.coil3", name = "coil-svg", version.ref = "coilV"}
 coilNetwork = {group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coilV"}
 coroutines = {group = "org.jetbrains.kotlin", name = "kotlinx.coroutines-core", version.ref = "coroutinesVersion"}
+room = {group = "androidx.room", name = "room-runtime", version.ref = "roomV"}
+roomKtx = {group = "androidx.room", name = "room-ktx", version.ref = "roomV"}
+roomCompiler = {group = "androidx.room", name = "room-compiler", version.ref = "roomV"}
 
 [plugins]
 hilt = {id = "com.google.dagger.hilt.android", version.ref = "hiltV"}

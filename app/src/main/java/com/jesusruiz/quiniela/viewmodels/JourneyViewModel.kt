@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesusruiz.quiniela.data.datasource.ResultsRepository
 import com.jesusruiz.quiniela.data.datasource.UserLeaguesRepository
+import com.jesusruiz.quiniela.data.repository.MockCalculationPointsImp
 import com.jesusruiz.quiniela.models.Game
 import com.jesusruiz.quiniela.models.Journey
 import com.jesusruiz.quiniela.utils.TemplateData
@@ -18,7 +19,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
-import kotlin.math.sign
 
 enum class UIStates{
     LOADING,
@@ -28,12 +28,12 @@ enum class UIStates{
 }
 
 data class JourneyState(
-    val journeys: List<Journey> = listOf(),
     val scores: List<Game> = listOf(),
     val journeySelected: Journey = Journey(API_LEAGUE_ID = "0"),
     val score: Int = 0,
     val predictions: List<Game> = listOf(),
     val uiState: UIStates = UIStates.STARTING,
+    val gameScore: List<Int> = listOf()
 )
 
 sealed class JourneyInputActions{
@@ -41,13 +41,18 @@ sealed class JourneyInputActions{
     data class InitScreen(val leagueId: String, val journeyId: String): JourneyInputActions()
     object ChangeAllPredictions : JourneyInputActions()
     data class ChangeUIState(val value: UIStates): JourneyInputActions()
+    data class ChangeScore(val value: Int): JourneyInputActions()
+    data class ChangeGameScore(val value: List<Int>): JourneyInputActions()
 }
 val journeys = TemplateData().journey
 @HiltViewModel
 class JourneyViewModel @Inject constructor(
     private val repository: ResultsRepository,
-    private val leaguesRepository: UserLeaguesRepository
+    private val leaguesRepository: UserLeaguesRepository,
+    private val mathRepository: MockCalculationPointsImp
 ): ViewModel(){
+    val TAG = this::class.simpleName
+
     private val _journeyState = MutableStateFlow(JourneyState())
         val state: StateFlow<JourneyState> = _journeyState.asStateFlow()
 
@@ -55,12 +60,13 @@ class JourneyViewModel @Inject constructor(
         if (state.value.journeySelected.API_LEAGUE_ID.isEmpty())
         {
             viewModelScope.launch {
-             val userLeague =  leaguesRepository.getUserLeagues()
+             val userLeague =  leaguesRepository.getUserLeagues("a")
 
             }
 
         }
     }
+
     fun onAction(action: JourneyInputActions){
         when(action){
             is JourneyInputActions.ChangePrediction -> {
@@ -75,6 +81,17 @@ class JourneyViewModel @Inject constructor(
                     currentState.copy(predictions = updatedPrediction )
                 }
 
+            }
+            is JourneyInputActions.ChangeGameScore -> {
+                Log.d( TAG, "Game scores updated: ${action.value}")
+                _journeyState.update { jState ->
+                    jState.copy(gameScore = action.value)
+                }
+            }
+            is JourneyInputActions.ChangeScore -> {
+                _journeyState.update { jState ->
+                    jState.copy(score = action.value)
+                }
             }
             is JourneyInputActions.ChangeAllPredictions -> {
                 getGamesByWeekAndJourney()
@@ -104,7 +121,7 @@ class JourneyViewModel @Inject constructor(
                     _journeyState.value =  _journeyState.value.copy(predictions = predictions.data)
                 }
                 is Resource.Error -> {
-                    Log.d("Error", predictions.message)
+                    Log.d( TAG, predictions.message)
                 }
             }
 
@@ -117,41 +134,17 @@ class JourneyViewModel @Inject constructor(
             onAction(JourneyInputActions.ChangeUIState(UIStates.LOADING))
             val results = getResultsByRepository()
             results?.let { games ->
-                _journeyState.value = _journeyState.value.copy(scores = games)
+                _journeyState.update  { it.copy(scores = games) }
                 val newScore = getPredictionPoints()
-                _journeyState.value = _journeyState.value.copy(score =  newScore)
-                Log.d("Score", newScore.toString())
+                Log.d( TAG, newScore.toString())
                 onAction(JourneyInputActions.ChangeUIState(UIStates.READY))
             } ?: run {
                 onAction(JourneyInputActions.ChangeUIState(UIStates.FAILED))
-                Log.d("Score", "No funciona")
+                Log.d( TAG, "No funciona")
             }
         }
     }
-
-    fun getJourneyByID(ID: String){
-        onAction(JourneyInputActions.ChangeUIState(UIStates.LOADING))
-        val actualJourney = _journeyState.value.journeys.find {
-           it.id == ID
-       }
-        actualJourney?.let {
-            _journeyState.value = _journeyState.value.copy(journeySelected = actualJourney)
-        } ?: run {
-            viewModelScope.launch(Dispatchers.IO) {
-                //repository //Get UserJourney In My DataBase
-              val result = repository.getFullJourney(1)
-                when(result){
-                    is Resource.Success ->{
-                       _journeyState.value = _journeyState.value.copy(journeySelected = result.data)
-                    }
-                    is Resource.Error -> {
-                        result.message
-                    }
-                }
-            }
-        }
-    }
-
+    
 
     suspend fun getResultsByRepository(): List<Game>?{
         return withContext(Dispatchers.IO) {
@@ -163,7 +156,7 @@ class JourneyViewModel @Inject constructor(
                       result.data
                   }
                   is Resource.Error->{
-                      Log.d("Error", result.message)
+                      Log.d( TAG, result.message)
                       null
                   }
               }
@@ -172,40 +165,53 @@ class JourneyViewModel @Inject constructor(
         }
     }
 
-    fun getPredictionsByBet(): List<Int>{
-        val newList: MutableList<Int> = mutableListOf()
-        _journeyState.value.scores.forEachIndexed{ index, score ->
-            val prediction =  _journeyState.value.predictions[index]
-           val score = when{
-                score.homeScore == prediction.homeScore &&
-                        score.awayScore == prediction.awayScore -> 3
-
-                (score.homeScore - score.awayScore).sign ==
-                        (prediction.homeScore - prediction.awayScore).sign -> 1
-
-                else -> 0
-            }
-            newList.add(score)
+     fun startPredictionPointsCalculation() {
+        viewModelScope.launch {
+            getPredictionPoints()
         }
-        return newList
     }
 
-    fun getPredictionPoints(): Int{
-        var generalPoints = 0
-         _journeyState.value.scores.forEachIndexed{ index, score ->
-            val prediction =  _journeyState.value.predictions[index]
-            generalPoints += when{
-                score.homeScore == prediction.homeScore &&
-                        score.awayScore == prediction.awayScore -> 3
-
-                (score.homeScore - score.awayScore).sign ==
-                        (prediction.homeScore - prediction.awayScore).sign -> 1
-
-                else -> 0
-            }
+    fun startPredictionPointsByBetCalculation() {
+        viewModelScope.launch {
+            getPredictionsByBet()
         }
+    }
 
-        return generalPoints
+    suspend fun getPredictionsByBet() {
+       return withContext(Dispatchers.IO) {
+           val results = getResultsByRepository()
+           _journeyState.update { currentState ->
+               currentState.copy(scores = results ?: listOf())
+           }
+           val result = mathRepository.getPredictionsPointsByBet(
+                prediction = _journeyState.value.predictions,
+                results = _journeyState.value.scores
+              )
+              when(result) {
+                is Resource.Success -> {
+                    onAction(JourneyInputActions.ChangeGameScore(result.data))
+                }
+                is Resource.Error -> {
+                    Log.d( TAG, result.message)
+                }
+              }
+           }
+    }
+
+   suspend fun getPredictionPoints() {
+     return withContext(Dispatchers.IO) {
+           val result = mathRepository.getPredictionsPoints(
+                prediction = _journeyState.value.predictions,
+                results = _journeyState.value.scores
+              )
+              when(result){
+                is Resource.Success ->
+                    onAction(JourneyInputActions.ChangeScore( result.data))
+                is Resource.Error -> {
+                     Log.d( TAG, result.message)
+                }
+              }
+         }
 
     }
 

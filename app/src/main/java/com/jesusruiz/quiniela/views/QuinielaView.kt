@@ -1,11 +1,11 @@
 package com.jesusruiz.quiniela.views
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -29,7 +29,6 @@ import com.jesusruiz.quiniela.viewmodels.JourneyInputActions
 import com.jesusruiz.quiniela.viewmodels.JourneyViewModel
 import com.jesusruiz.quiniela.viewmodels.UIStates
 import com.jesusruiz.quiniela.views.items.GameItem
-import com.jesusruiz.quiniela.views.items.JourneyItemButton
 import com.jesusruiz.quiniela.views.items.PredictionItem
 
 
@@ -68,16 +67,10 @@ fun QuinielaView(modifier: Modifier = Modifier, journeyViewModel: JourneyViewMod
             }
             UIStates.STARTING -> {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(paddingValues)) {
-                    LazyRow(modifier = Modifier.padding(horizontal = 10.dp)) {
-                        items(items = state.journeys){
-                                journey ->
-                            JourneyItemButton(Modifier.padding(horizontal = 3.dp),weekNumber = journey.roundNumber, weekPoints = state.score,)
-                        }
-                    }
                     LazyColumn(modifier = Modifier.padding(vertical = 10.dp)) {
                         items(state.predictions, key = {it.id}){
                                 game->
-                            GameItem(localTeam = game.firstClub, awayTeam = game.secondClub, homeScore = game.homeScore, awayScore = game.awayScore , onScoreChange = {
+                            GameItem(localTeam = game.homeTeam, awayTeam = game.awayTeam, homeScore = game.homeScore, awayScore = game.awayScore , onScoreChange = {
                                     local, away ->
                                 val updatedScore = game.copy(
                                     homeScore = local,
@@ -88,6 +81,7 @@ fun QuinielaView(modifier: Modifier = Modifier, journeyViewModel: JourneyViewMod
                         }
                     }
                     Button(onClick = {
+                        journeyViewModel.startPredictionPointsByBetCalculation()
                         journeyViewModel.getPredictionRanking()
                     },) {
                         Text("Validar")
@@ -96,19 +90,22 @@ fun QuinielaView(modifier: Modifier = Modifier, journeyViewModel: JourneyViewMod
             }
             UIStates.READY -> {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(paddingValues)) {
-                    val score = journeyViewModel.getPredictionPoints()
+                    val score = state.score
                     Text(
                         modifier = Modifier.padding(vertical = 10.dp),
                         text = "Total Points: $score"
                     )
                     LazyColumn(modifier = Modifier.padding(vertical = 20.dp)) {
                         val scores = state.scores
-                        val bets = journeyViewModel.getPredictionsByBet()
+                        Log.d("Scores", scores.toString())
+                        val bets = state.gameScore
+                        Log.d("Scores", bets.toString())
+
                         val gamesWithBets = scores.zip(bets)
                         items(gamesWithBets, key = { (game, bet) -> game.id }) { (game, bet) ->
                             PredictionItem(
-                                localTeam = game.firstClub,
-                                awayTeam = game.secondClub,
+                                localTeam = game.homeTeam,
+                                awayTeam = game.awayTeam,
                                 homeScore = game.homeScore,
                                 awayScore = game.awayScore,
                                 result = bet

@@ -32,14 +32,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.jesusruiz.quiniela.viewmodels.CreateLeagueInputActions
-import com.jesusruiz.quiniela.viewmodels.LeagueViewModel
+import com.jesusruiz.quiniela.viewmodels.CreationLeagueViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreationLeagueView(navController: NavController, leagueViewModel: LeagueViewModel){
-    val state by leagueViewModel.state.collectAsState()
+fun CreationLeagueView(navController: NavController, creationLeagueViewModel: CreationLeagueViewModel){
+    val state by creationLeagueViewModel.state.collectAsState()
     LaunchedEffect(Unit) {
-        leagueViewModel.getAvailableLeagues()
+        creationLeagueViewModel.getAvailableLeagues()
     }
     Scaffold(modifier = Modifier, topBar = {
         TopAppBar(title = {
@@ -60,7 +60,7 @@ fun CreationLeagueView(navController: NavController, leagueViewModel: LeagueView
             OutlinedTextField(modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 15.dp),
                 value = state.selectedLeague.leagueName,
                 shape = RoundedCornerShape(12.dp),
-                onValueChange = { leagueViewModel.onAction(CreateLeagueInputActions.ChangeNameSelectedLeague(it))},
+                onValueChange = { creationLeagueViewModel.onAction(CreateLeagueInputActions.ChangeNameSelectedLeague(it))},
                 label = {Text("League Name")}, )
             ExposedDropdownMenuBox(expanded = expanded,
                 onExpandedChange = { expanded = !expanded}) {
@@ -82,17 +82,20 @@ fun CreationLeagueView(navController: NavController, leagueViewModel: LeagueView
                         Log.d("Item", name)
                         DropdownMenuItem(text = { Text(text = name) },
                             onClick = {
-                                leagueViewModel.onAction(CreateLeagueInputActions.ChangeSelectedLeague(id to name))
+                                creationLeagueViewModel.onAction(CreateLeagueInputActions.ChangeSelectedLeague(id to name))
                                 expanded = false
                             }
                         )
                     }
                 }
             }
-            Button(onClick = {
-                leagueViewModel.addLeague()
+            Button(
+                enabled = state.selectedLeague.apiLeagueName.isNotBlank() && state.selectedLeague.apiID.isNotEmpty(),
+                onClick = {
+                creationLeagueViewModel.addLeague()
                 navController.popBackStack()
-                }) {
+                }
+            ) {
                 Text("Crear")
             }
         }

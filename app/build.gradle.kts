@@ -71,4 +71,8 @@ dependencies {
     implementation(libs.coilSvg)
     implementation(libs.retrofit)
     implementation(libs.retrofitGson)
+
+    implementation(libs.room)
+    kapt(libs.roomCompiler)
+    implementation(libs.roomKtx)
 }

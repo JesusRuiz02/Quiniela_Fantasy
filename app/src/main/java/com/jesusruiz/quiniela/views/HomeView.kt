@@ -48,10 +48,12 @@ fun HomeView(navController: NavController, homeViewModel: HomeViewModel){
         Card(Modifier.fillMaxWidth().padding(20.dp)) {
            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth().padding(20.dp),) {
                Text("Mis Ligas")
+               Log.d("Liga", state.userLeagues.toString())
                state.userLeagues.forEach {
                    league ->
+                   Log.d("Liga", league.id)
                    LeagueItem(modifier = Modifier.padding(10.dp), leagueName = league.leagueName, leagueApiName = league.apiLeagueName) {
-                        navController.navigate(Screen.QuinielaView.createRoute(leagueId = league.apiLeagueName, journeyId = "0" ))
+                        navController.navigate(Screen.LeagueView.createRoute(leagueId = league.id))
                    }
                }
 
