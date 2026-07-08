@@ -29,7 +29,7 @@ data class LeagueStateUI(
 @HiltViewModel
 class CreationLeagueViewModel @Inject constructor(
     val repository: ResultsRepository,
-    val userRepository: UserLeaguesRepository
+    val leaguesRepository: UserLeaguesRepository
 ): ViewModel() {
     private val _leagueState = MutableStateFlow(LeagueStateUI())
     val state: StateFlow<LeagueStateUI> = _leagueState.asStateFlow()
@@ -54,8 +54,8 @@ class CreationLeagueViewModel @Inject constructor(
 
     fun addLeague(){
         viewModelScope.launch(Dispatchers.IO) {
-            userRepository.addUserLeague(state.value.selectedLeague, dummyUser.id)
-            Log.d("Error",userRepository.getUserLeagues(dummyUser.id).toString())
+           val result =  leaguesRepository.addUserLeague(state.value.selectedLeague, dummyUser.id)
+            Log.d("DB_DEBUG","addUserLeague result=$result")
         }
     }
 

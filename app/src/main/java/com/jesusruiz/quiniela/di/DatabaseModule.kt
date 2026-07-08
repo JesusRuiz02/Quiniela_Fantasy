@@ -40,4 +40,8 @@ object DatabaseModule {
     @Singleton
     @Provides
     fun provideLeagueDao(database: QuinielaDatabase) = database.leagueDao()
+
+    @Singleton
+    @Provides
+    fun provideLeagueMembersDao(database: QuinielaDatabase) = database.leagueMemberDao()
 }

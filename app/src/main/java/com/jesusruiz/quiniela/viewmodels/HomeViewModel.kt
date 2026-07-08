@@ -1,5 +1,6 @@
 package com.jesusruiz.quiniela.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesusruiz.quiniela.data.datasource.ResultsRepository
@@ -27,6 +28,7 @@ class HomeViewModel @Inject constructor(
     val userLeaguesRepository: UserLeaguesRepository
 ): ViewModel() {
     private val userLeagueRepository = userLeaguesRepository
+    private val TAG = this::class.simpleName
     private val _homeState = MutableStateFlow(HomeState())
     val state: StateFlow<HomeState> = _homeState.asStateFlow()
 
@@ -40,12 +42,14 @@ class HomeViewModel @Inject constructor(
         subscribeToLeagues()
     }
     private fun subscribeToLeagues(){
-        userLeagueRepository.getUserLeaguesFlow()
+        Log.d(TAG, "Subscribing to leagues for user: ${user.id}")
+        userLeagueRepository.getUserLeaguesFlow(user.id)
             .onEach {
                 leagues ->
                 _homeState.update { it.copy(userLeagues = leagues) }
             }
             .launchIn(viewModelScope)
+        Log.d(TAG, "Subscribed to leagues for user: ${_homeState.value.userLeagues}")
     }
 
     fun getLeagues(){

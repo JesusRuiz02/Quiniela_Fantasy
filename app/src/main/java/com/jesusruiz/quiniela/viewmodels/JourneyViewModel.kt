@@ -60,7 +60,7 @@ class JourneyViewModel @Inject constructor(
         if (state.value.journeySelected.API_LEAGUE_ID.isEmpty())
         {
             viewModelScope.launch {
-             val userLeague =  leaguesRepository.getUserLeagues("a")
+             val userLeague =  leaguesRepository.getUserLeagues("12")
 
             }
 

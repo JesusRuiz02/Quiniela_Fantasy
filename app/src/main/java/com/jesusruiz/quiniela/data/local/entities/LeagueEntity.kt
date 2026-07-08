@@ -2,6 +2,7 @@ package com.jesusruiz.quiniela.data.local.entities
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "leagues")
@@ -33,7 +34,8 @@ data class LeagueEntity(
             childColumns = ["userId"],
             onDelete = ForeignKey.CASCADE
         )
-    ]
+    ],
+    indices = [Index(value = ["leagueId"]), Index(value = ["userId"])]
 )
 data class LeagueMemberEntity(
     val leagueId: String = "",

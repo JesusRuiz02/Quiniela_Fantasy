@@ -2,6 +2,7 @@ package com.jesusruiz.quiniela.data.local.entities
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "predictions",
@@ -12,8 +13,8 @@ import androidx.room.PrimaryKey
             childColumns = ["gameId"],
             onDelete = ForeignKey.CASCADE
         )
-    ])
-
+    ],
+    indices = [Index(value = ["gameId"]), Index(value = ["userId"]) ])
 data class PredictionEntity(
     @PrimaryKey
     val id: String = "",
